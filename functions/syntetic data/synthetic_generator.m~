@@ -3,10 +3,6 @@ close all
 clear
 file_name_string = 'Synthetic';
 mkdir(['Plots/',file_name_string]);
-dataset_folder = 'SyntheticDataset'
-experiment_name = 'Gaussian';
-dataset_folder = [dataset_folder,'/',experiment_name];
-mkdir(dataset_folder);
 %% Experiment params
 d_max = 800;
 samples_per_meter = 1e3;
@@ -57,16 +53,9 @@ rss_dbm_truncated_cell = truncate_data_cell(rssi_dbm_cell,-94);
 %%
 test_alpha = alpha;
 test_epsilon = epsilon;
-test_gaussian_mu = fading_params_mu;
-test_gaussian_omega = fading_params_sigma;
-train_rss_dbm_truncated_cell = rss_dbm_truncated_cell;
-train_total_recieved_samples = funoncellarray1input(rss_dbm_truncated_cell,@length);
-train_total_samples = funoncellarray1input(rssi_dbm_cell,@length);
-train_per = 1-(train_total_recieved_samples./train_total_samples);
+test_nakagami_mu = fading_params_mu;
+test_nakagami_omega = fading_params_sigma;
 
-figure;
-plot(train_per);
-save([dataset_folder,'/syn_parameters_dataset.mat'],'test_alpha','test_epsilon','test_gaussian_mu','test_gaussian_omega','train_rss_dbm_truncated_cell','train_total_recieved_samples','train_total_samples','train_per');
-
+save('syn_parameters_dataset.mat','test_alpha','test_epsilon',
 % variable_names = {'fading_dbm_cell','rss_dbm_cell','rss_dbm_truncated_cell',
 % save(
