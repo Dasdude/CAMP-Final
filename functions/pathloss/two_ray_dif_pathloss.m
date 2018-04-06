@@ -8,6 +8,7 @@ function [params,alphas] = two_ray_dif_pathloss(pathloss_emp,Tx_height,Rx_height
     epsilon = 1.02;
     alphas = 0;
     tx_target = Tx_height;
+    alpha_target=alpha;
     for i = 1:w:(max_distance-w)
         
         

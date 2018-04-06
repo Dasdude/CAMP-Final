@@ -9,7 +9,7 @@ function [fading_linear_cell] = nakagami_generator(params,samples_per_bin,sample
                 continue
             end
             fading_linear_cell{i} = random('nakagami',parameter(1),parameter(2),samples_per_bin,1);
-            fading_linear_cell{i} = fading_linear_cell{i}.*params(i,3);
+%             fading_linear_cell{i} = fading_linear_cell{i}.*params(i,3);
         end
     else
         for i = 1:size(params,1)
