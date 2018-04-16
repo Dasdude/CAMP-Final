@@ -3,7 +3,7 @@ close all
 clear
 addpath(genpath('.'))
 %% File Names
-mode_index =6;
+mode_index =5;
 same_low_up = 15;
 same_med_up = 30;
 
@@ -11,10 +11,10 @@ opposite_low_up = 15;
 opposite_med_up = 30;
 
 SAME_DENS_LOW = {'same','low','0',same_low_up,1.0043,2.0108};
-SAME_DENS_MED = {'same','medium',same_low_up,same_med_up,1.0091,2.0237};
+SAME_DENS_MED = {'same','med',same_low_up,same_med_up,1.0091,2.0237};
 SAME_DENS_HIGH = {'same','high',same_med_up,100,1.0036,2.0576};
 OP_DENS_LOW = {'opposite','low','0',opposite_low_up,1,2.1434};
-OP_DENS_MED = {'opposite','medium',opposite_low_up,opposite_med_up,1,2.1904};
+OP_DENS_MED = {'opposite','med',opposite_low_up,opposite_med_up,1,2.1904};
 OP_DENS_HIGH = {'opposite','high',opposite_med_up,100,1,2.26};
 mode_list = {SAME_DENS_LOW,SAME_DENS_MED,SAME_DENS_HIGH,OP_DENS_LOW,OP_DENS_MED,OP_DENS_HIGH};
 mode = mode_list{mode_index};
