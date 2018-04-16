@@ -35,8 +35,10 @@ function [params,alphas] = two_ray_dif_pathloss(pathloss_emp,Tx_height,Rx_height
 %                 [epsilon_target,loss_val]=fmincon(loss_handle,[epsilon_target],[],[],[],[],1,inf,[],options);
 %                 fprintf('d1:%d,d2:%d  loss:%d epsilon:%d  \n',i,i+w,loss_val,epsilon_target)
                 
-                
+                    %% FOR STEVE COMMENTed
                 [alpha_target,alphas] = pathloss_dif_loss_find_alpha(i,i+w,pathloss_emp,epsilon_target,tx_target,tx_target,lambda,same_fade_window);
+                
+                
 %                 fprintf('d1:%d,d2:%d  loss:%d alpha:%d  \n',i,i+w,loss_val,alpha_target)
                 
                 

@@ -4,12 +4,13 @@ close all
 clear
 axis tight
 'Correct Project'
-experiment_name = 'SetTest2';
+experiment_name = 'pt';
 addpath(genpath('.'))
-for run = 1:5
-    mode_index = 1;
+for run = 1:1
+    mode_index = 3;
     clearvars -except mode_index experiment_name
     close all
+    
     %% Constant Variables
     % Modes
     SAME_DENS_LOW = {'Same','Low','0','10',1.0043,2.0108};
@@ -34,13 +35,15 @@ for run = 1:5
     lambda=LIGHT_SPEED/CARRIER_FREQ;
     %% input parameters
     show_gassuan_dist = 0;
-    show_nakagami_dist = 0;
+    show_nakagami_dist = 1;
     calc_gaussian = 0;
-    min_samples_per_cell = 20; % for estimating Fading
+    min_samples_per_cell = 100; % for estimating Fading
+    use_mean_as_pathloss = 0;
     %% File Preperation
     mode = mode_list{mode_index};
     file_string = [mode{1},' Direction ',mode{2},' Density ',mode{3},' to ',mode{4},'.csv'];
     file_name_string = [experiment_name,'/',mode{1},' Direction ',mode{2},' Density ',mode{3},' to ',mode{4}];
+    mkdir(['Plots/',file_name_string,'/Results'])
     mkdir(['Plots/',file_name_string]);
     %% Dataset prepare
     display('Data Prepare Phase')
@@ -62,34 +65,43 @@ for run = 1:5
     display('Pathloss Estimation Phase')
 %     EPSILON = mode{5};
 %     ALPHA = mode{6};
-    if calc_gaussian ==1
+    if calc_gaussian ==1 || exist(['Plots/',file_name_string,'/Results/','GmeanEst.mat'])==0
         data_dbm_mean = funoncellarray1input(data_dbm_cell,@mean);
         data_dbm_std = funoncellarray1input(data_dbm_cell,@std);
         data_mean_estimate_dbm = mean_estimator_gaussian_mle_adptv_bin_window(data_dbm_cell,[1,1],1,packet_loss_stat,-inf,0,1,file_name_string,show_gassuan_dist);
         figure;plot(1:d_max,data_mean_estimate_dbm(:,1),1:d_max,data_dbm_mean);legend('Gaussian Estimate Mean Data','Field Mean Data');saveas(gcf,['Plots/',file_name_string,'/','Gaussian Mean Compare.png']);
         figure;plot(1:d_max,data_mean_estimate_dbm(:,2),1:d_max,data_dbm_std);legend('Gaussian Estimate STD Data','Field STD Data');saveas(gcf,['Plots/',file_name_string,'/','Gaussian STD Compare.png']);
+        data_mean_estimate_dbm = data_mean_estimate_dbm(:,1);
         save(['Plots/',file_name_string,'/Results/','GmeanEst.mat'],'data_mean_estimate_dbm')
     else
         if exist(['Plots/',file_name_string,'/Results/','nakmean.mat'])==2
             display('Nakmean Loaded')
             load(['Plots/',file_name_string,'/Results/','nakmean.mat'])
             data_mean_estimate_dbm = generated_rssi_dbm_mean;
+            
         else
             load(['Plots/',file_name_string,'/Results/','GmeanEst.mat'])
+            data_mean_estimate_dbm = data_mean_estimate_dbm(:,1);
         end
     end
 %     [ALPHA,EPSILON,pathloss_expand_emp] = pathloss_estimator(data_dbm_cell,TX_HEIGHT,CARRIER_FREQ,per,-95,TX_POWER);
     data_mean_emperical = funoncellarray1input(data_dbm_cell,@mean);
-    data_mean_emperical = generated_rssi_dbm_mean;
-    pathloss_emperical = TX_POWER - data_mean_emperical;
     
-    [alpha,epsilon,tx_height] = pathloss_estimator_hossein_method(pathloss_emperical,TX_HEIGHT,CARRIER_FREQ,packet_loss_stat,-95,TX_POWER,500,20,1);
+    pathloss_emperical = TX_POWER - data_mean_emperical;
+    pathloss_mean_estimate = TX_POWER - data_mean_estimate_dbm;
+    [alpha,epsilon,tx_height] = pathloss_estimator_hossein_method(pathloss_mean_estimate,TX_HEIGHT,CARRIER_FREQ,packet_loss_stat,-95,TX_POWER,500,20,1);
     ALPHA = alpha(1);
+%     ALPHA =2.2;
+%     ALPHA=1.9;
     EPSILON = epsilon(1);
+%     EPSILON =1.008
     TX_HEIGHT = tx_height(1);
     RX_HEIGHT = tx_height(1);
     pathloss = pathloss_gen_2ray(TX_HEIGHT,RX_HEIGHT,EPSILON,ALPHA,lambda,d_max);
-    figure;plot(1:d_max,TX_POWER -  pathloss_emperical,'r',1:d_max,TX_POWER-pathloss,'b',1:d_max,data_mean_estimate_dbm(:,1),'g');title(['Pathloss:',' alpha :',num2str(ALPHA),' eps',num2str(EPSILON),'antenna height',num2str(TX_HEIGHT)]);legend('Field Median RSSI', '2 Ray', 'Estimated Mean');saveas(gcf,['Plots/',file_name_string,'/','Pathloss Compare.png']);    
+    if use_mean_as_pathloss
+        pathloss = pathloss_mean_estimate;
+    end
+    figure;plot(1:d_max,TX_POWER -  pathloss_emperical,'r',1:d_max,TX_POWER-pathloss,'b',1:d_max,data_mean_estimate_dbm,'g');title(['Pathloss:',' alpha :',num2str(ALPHA),' eps',num2str(EPSILON),'antenna height',num2str(TX_HEIGHT)]);legend('Field Median RSSI', '2 Ray', 'Estimated Mean');saveas(gcf,['Plots/',file_name_string,'/','Pathloss Compare.png']);    
 %     pathloss = TX_POWER-data_mean_estimate_dbm(:,1);
     
 %     pathloss = pathloss-pathloss;
@@ -107,6 +119,7 @@ for run = 1:5
 %     [fading_params,fading_bin_start_edges,aprx_per,loss_vals] = fading_estimator_nakagami_mle_adptv_bin_window(fading_linear_cell,[1,1,0],d_min,packet_loss_stat,TRUNCATION_VALUE,5000,30,file_name_string,show_nakagami_dist,fading_min_max);
     [fading_params,fading_bin_start_edges,aprx_per,loss_vals] = fading_estimator_nakagami_set(fading_linear_cell,[1,1,0],d_min,packet_loss_stat,TRUNCATION_VALUE,2000,800,file_name_string,show_nakagami_dist,min_samples_per_cell);
     %% Storing New Mean Estimate
+    
     generated_fading_linear = nakagami_generator(fading_params,1e3);
     generated_fading_dbm = linear2dbm(generated_fading_linear);
     generated_rssi_dbm = add_fading(pathloss,generated_fading_dbm,TX_POWER);
@@ -116,12 +129,12 @@ for run = 1:5
     save(['Plots/',file_name_string,'/Results/','nakmean.mat'],'generated_rssi_dbm_mean')
     %% Saving Parameters
     display('Saving Parameters')
-    mkdir(['Plots/',file_name_string,'/Results'])
+    
     nakagami_mu = fading_params(:,1);
     nakagami_omega = fading_params(:,2);
     tworay_pathloss_alpha = ALPHA;
     tworay_pathloss_epsilon = EPSILON;
-    save(['Plots/',file_name_string,'/Results/','Parameters.mat'],'TX_HEIGHT','RX_HEIGHT','tworay_pathloss_alpha','tworay_pathloss_epsilon','TX_POWER','CARRIER_FREQ','nakagami_mu','nakagami_omega','EPSILON','ALPHA','fading_params','aprx_per','loss_vals','fading_bin_start_edges')
+    save(['Plots/',file_name_string,'/Results/','Parameters.mat'],'TX_HEIGHT','RX_HEIGHT','tworay_pathloss_alpha','tworay_pathloss_epsilon','TX_POWER','CARRIER_FREQ','nakagami_mu','nakagami_omega','EPSILON','ALPHA','fading_params','aprx_per','loss_vals','fading_bin_start_edges','pathloss','use_mean_as_pathloss')
     
     %% Percentile
     percentiles_generated = percentile_array([10,25,50,75,90],generated_rssi_dbm);
@@ -129,7 +142,12 @@ for run = 1:5
     percentiles_rssi = percentile_array([10,25,50,75,90],data_dbm_cell);
     figure;plot(percentiles_generated(:,[1,3,5]));hold on ;plot(percentiles_rssi(:,[1,3,5]));legend('10% model','50% model','90% model','10% field','50% field','90% field');saveas(gcf,['Plots/',file_name_string,'/','Percentile RSSI 10.png']);
     figure;plot(percentiles_generated_trunc(:,[1,3,5]));hold on ;plot(percentiles_rssi(:,[1,3,5]));legend('10% model','50% model','90% model','10% field','50% field','90% field');saveas(gcf,['Plots/',file_name_string,'/','Percentile RSSI Truncated 10.png']);
-    %     shift_values_dbm = linear2dbm_mat(fading_params(:,3));
+    
+    %% PER
+%     figure;plot(packet_loss_stat(:,2));hold;plot(packet_loss_stat(:,2)-packet_loss_stat(:,1));title('Total Samples vs Received Samples');legend('Total Samples','Recieved Samples');saveas(gcf,['Plots/',file_name_string,'/','Samples Received vs Total.png']);
+%     figure; plot(generated_per);hold on; plot(aprx_per);plot(packet_loss_stat(:,1)./packet_loss_stat(:,2));title('PER Value');legend('Generated Data','Smooth Field','Field','Location','northwest');saveas(gcf,['Plots/',file_name_string,'/','PER Comparison.png']);
+%     figure;plot(loss_vals);title('loss');saveas(gcf,['Plots/',file_name_string,'/','Loss.png']);
+        %     shift_values_dbm = linear2dbm_mat(fading_params(:,3));
     %% Fading Distribution Generation
 %     fading_linear_generated_cell = nakagami_generator(fading_params,10000);
 %     gaussian_generated_cell = gaussian_generator(data_mean_estimate_dbm,10000);

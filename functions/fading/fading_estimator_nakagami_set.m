@@ -17,26 +17,23 @@ function [params,bin_start_edges,approximated_per,loss_values] = fading_estimato
     bin_mid_edges = (d_min:bin_size:length(fading_linear_cell))*0;
     d_max = length(fading_linear_cell);
     
-    for i= 1:length(bin_start_edges)
-        [~,s,e] = collect_neighbour_data(fading_linear_cell,i,min_samples,max_bin_size);
-        bin_start_edges(i) = s;
-        bin_end_edges(i)=e;
-        bin_mid_edges(i)=i;
-    end
     %%
     approximated_per = zeros(1,d_max);
     loss_values = zeros(1,d_max)*nan;
-    
+    prev_bin = [0,0];
     for i = 1:length(fading_linear_cell)
         j=i-1;
 
         [fading_data_linear,s,e,samples_ratio] = collect_neighbour_data_set(fading_linear_cell,i,min_samples,max_bin_size,min_samples_per_cell);
         range_start = s;
         range_end = e;
+        bin_start_edges(i) = s;
+        bin_end_edges(i)=e;
+        bin_mid_edges(i)=i;
         if j==0
             initial_param_value = mle(fading_data_linear,'distribution','nakagami');
         else
-            temp_index_start = max(1,s-20);
+            temp_index_start = max(1,j-20);
             initial_param_value = mean(params(temp_index_start:j,:),1);
         end
         per_value = sum(per_stat(range_start:range_end,1))./ sum(per_stat(range_start:range_end,2));
@@ -46,9 +43,16 @@ function [params,bin_start_edges,approximated_per,loss_values] = fading_estimato
 %             params(range_start:range_end,:)=nan;
 %             continue;
 %         end
-        
-        [params_res,loss] = mle_set_nakagami(initial_param_value(1:2),fading_linear_cell(s:e),per_list(s:e),.5,i-s+1,min_samples_per_cell);
-        
+        if all(prev_bin == [s,e])
+            params_res = params(i-1,:);
+            loss=loss_values(i-1);
+        else
+            if length(fading_linear_cell{i}>20) || i==1
+                [params_res,loss] = mle_set_nakagami(initial_param_value(1:2),fading_linear_cell(s:e),per_list(s:e),.5,i-s+1,min_samples_per_cell);
+            else
+                params_res = params(i-1,:);
+            end
+        end
         fprintf('kld loss %d:%d for bin %d : %d \n',range_start,range_end,i,loss)
         if show_dist
             histogram_samples_vs_dist(fading_linear_cell{i},'lognakagami',params_res,10000,per_list(i),['Bin ',num2str(i),'Samples range ',num2str(range_start),':',num2str(range_end),' '])
@@ -66,6 +70,7 @@ function [params,bin_start_edges,approximated_per,loss_values] = fading_estimato
             params_res(3) =0;
         end
         params(i,:) =params_res;
+        prev_bin = [s,e];
 %         params(range_start:range_end,:) = repmat(params_res,range_end-range_start+1,1);
 %         params(range_start:range_end,3) = params(range_start:range_end,3).*fading_displacement(range_start:range_end)';
     end

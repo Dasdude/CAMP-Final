@@ -40,7 +40,7 @@ function [res,start_point,end_point,samples_ratio] = collect_neighbour_data_set(
 %         samples = samples+(s2-s)*length(data_cell{s})+(e-e2)*length(data_cell{e});
         
     end
-    res = concat_cell(cell_agg,1,cell_agg_idx);
+    res = concat_cell(data_cell,s,e);
     start_point = s;
     end_point = e;
 end

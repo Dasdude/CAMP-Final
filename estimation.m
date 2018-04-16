@@ -36,6 +36,7 @@ for mode_index = 3:3
     show_nakagami_dist = 0;
     calc_gaussian = 0;
     min_samples_per_cell = 5; % for estimating Fading
+    use_mean_as_pathloss = 1;
     %% File Preperation
     mode = mode_list{mode_index};
     file_string = [mode{1},' Direction ',mode{2},' Density ',mode{3},' to ',mode{4},'.csv'];

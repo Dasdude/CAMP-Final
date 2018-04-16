@@ -6,7 +6,7 @@ fun = @(x)loglikelihood_nakagami_set(x,data,per_rate,current_index,min_samples_p
 options = optimoptions(@fmincon,'Display','off','Algorithm','interior-point','MaxFunctionEvaluations',10000);
 % [params,loss_val]=fminunc(fun,params_mu_omega_init,options);
 % while loss_val>.01
-if length(data{current_index})<2
+if length(data{current_index})<10
     params = params_mu_omega_init;
     loss_val = 0;
 else

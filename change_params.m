@@ -3,7 +3,7 @@ close all
 clear
 addpath(genpath('.'))
 %% File Names
-mode_index =5;
+mode_index =4;
 
 SAME_DENS_LOW = {'Same','Low','0','10',1.0043,2.0108};
     SAME_DENS_MED = {'Same','Medium','10','30',1.0091,2.0237};
@@ -13,13 +13,29 @@ SAME_DENS_LOW = {'Same','Low','0','10',1.0043,2.0108};
     OP_DENS_HIGH = {'Opposite','High','25','Inf',1,2.26};
 mode_list = {SAME_DENS_LOW,SAME_DENS_MED,SAME_DENS_HIGH,OP_DENS_LOW,OP_DENS_HIGH};
 mode = mode_list{mode_index};
-experiment_name = 'Good Result';
-minimal_experiment_name = [mode{1},' Dir ',mode{2},' Density '];
+experiment_name = 'SetFinal2';
 mode_name = [mode{1},' Direction ',mode{2},' Density ',mode{3},' to ',mode{4}];
 parameter_folder = ['Plots/',experiment_name,'/',mode_name,'/Results'];
 parameter_path = [parameter_folder,'/Parameters.mat'];
 %% Load Params
 load(parameter_path);
+%% Change Parameters
+    param_index = 600;
+    fading_params(param_index:end,2) = fading_params(param_index,2);
+    fading_params(param_index:end,1) = fading_params(param_index,1);
+    fading_params(131:132,2) = fading_params(130,2);
+    fading_params(131:132,1) = fading_params(130,1);
+    save([parameter_folder,'/Parameters_edit.mat'],'TX_HEIGHT','RX_HEIGHT','tworay_pathloss_alpha','tworay_pathloss_epsilon','TX_POWER','CARRIER_FREQ','nakagami_mu','nakagami_omega','EPSILON','ALPHA','fading_params','aprx_per','loss_vals','fading_bin_start_edges','pathloss','use_mean_as_pathloss')
+   %Fourier 
+%    omega_freq = fft(fading_params(:,2));
+%    omega_freq(300:end) = 0;
+%    fading_params(:,2) = abs(ifft(omega_freq));
+%    mu_freq = fft(fading_params(:,1));
+%    mu_freq(300:end) = 0;
+%    fading_params(:,1) = abs(ifft(mu_freq));
+%    %Truncate
+%    fading_params(600:end,2) = fading_params(600,2);
+%     fading_params(600:end,1) = fading_params(600,1);
 %% Parameters
 d_max = 800;
 TRUNCATION_VALUE=-94;
@@ -58,24 +74,23 @@ generated_total_samples = funoncellarray1input(generated_rssi_dbm,@length);
 generated_received_samples = funoncellarray1input(generated_rssi_dbm_truncated,@length);
 generated_per = 1-(generated_received_samples./generated_total_samples);
 %% Pathloss Compare Plot
-figure;subplot(2,1,1);plot(generated_rssi_dbm_mean);hold;plot(data_dbm_mean);title([minimal_experiment_name,'Mean Comparison']);grid on;legend('Model','Field');subplot(2,1,2);plot(aprx_per);title('PER');ylabel('RSSI');saveas(gcf,['Plots/',file_name_string,'/','Mean Model vs Field.png']);
+figure;subplot(2,1,1);plot(generated_rssi_dbm_mean);hold;plot(data_dbm_mean);title('Mean Comparison');legend('Model','Field');subplot(2,1,2);plot(aprx_per);title('PER');saveas(gcf,['Plots/',file_name_string,'/','Mean Model vs Field.png']);
 %% Percentile Plot
 percentiles_generated = percentile_array([10,25,50,75,90],generated_rssi_dbm);
 percentiles_generated_trunc = percentile_array([10,25,50,75,90],generated_rssi_dbm_truncated);
 percentiles_rssi = percentile_array([10,25,50,75,90],data_dbm_cell);
-figure;plot(percentiles_generated(:,[1,3,5]));hold on ;plot(percentiles_rssi(:,[1,3,5]));grid on;title([minimal_experiment_name,'Percentile']);title('RSSI Percentile');ylabel('RSSI');xlabel('Range');legend('10% model','50% model','90% model','10% field','50% field','90% field');saveas(gcf,['Plots/',file_name_string,'/','Percentile RSSI 10.png']);
-figure;plot(percentiles_generated_trunc(:,[1,3,5]));hold on ;plot(percentiles_rssi(:,[1,3,5]));grid on;title([minimal_experiment_name,'Truncated Percentile']);title('RSSI Percentile');ylabel('RSSI');xlabel('Range');legend('10% model','50% model','90% model','10% field','50% field','90% field');saveas(gcf,['Plots/',file_name_string,'/','Percentile RSSI Truncated 10.png']);
-figure;plot(percentiles_generated(:,[2,3,4]));hold on ;plot(percentiles_rssi(:,[2,3,4]));grid on;title([minimal_experiment_name,'Percentile']);title('RSSI Percentile');ylabel('RSSI');xlabel('Range');legend('25% model','50% model','75% model','25% field','50% field','75% field');saveas(gcf,['Plots/',file_name_string,'/','Percentile RSSI 25.png']);
-figure;plot(percentiles_generated_trunc(:,[2,3,4]));hold on ;plot(percentiles_rssi(:,[2,3,4]));grid on;title([minimal_experiment_name,'Truncated Percentile']);title('RSSI Percentile');ylabel('RSSI');xlabel('Range');legend('25% model','50% model','75% model','25% field','50% field','75% field');saveas(gcf,['Plots/',file_name_string,'/','Percentile RSSI Truncated 25.png']);
+figure;plot(percentiles_generated(:,[1,3,5]));hold on ;plot(percentiles_rssi(:,[1,3,5]));grid on;legend('10% model','50% model','90% model','10% field','50% field','90% field');saveas(gcf,['Plots/',file_name_string,'/','Percentile RSSI 10.png']);
+figure;plot(percentiles_generated_trunc(:,[1,3,5]));hold on ;plot(percentiles_rssi(:,[1,3,5]));grid on;legend('10% model','50% model','90% model','10% field','50% field','90% field');saveas(gcf,['Plots/',file_name_string,'/','Percentile RSSI Truncated 10.png']);
+figure;plot(percentiles_generated(:,[2,3,4]));hold on ;plot(percentiles_rssi(:,[2,3,4]));grid on;legend('25% model','50% model','75% model','25% field','50% field','75% field');saveas(gcf,['Plots/',file_name_string,'/','Percentile RSSI 25.png']);
+figure;plot(percentiles_generated_trunc(:,[2,3,4]));hold on ;plot(percentiles_rssi(:,[2,3,4]));grid on;legend('25% model','50% model','75% model','25% field','50% field','75% field');saveas(gcf,['Plots/',file_name_string,'/','Percentile RSSI Truncated 25.png']);
 %% PER Plot
-figure;plot(packet_loss_stat(:,2));hold;plot(packet_loss_stat(:,2)-packet_loss_stat(:,1));grid on;title([minimal_experiment_name,'Total Samples vs Received Samples']);legend('Total Samples','Recieved Samples');saveas(gcf,['Plots/',file_name_string,'/','Samples Received vs Total.png']);
-% figure; plot(generated_per);hold on; plot(aprx_per);plot(packet_loss_stat(:,1)./packet_loss_stat(:,2));grid on;title([minimal_experiment_name,'PER Value']);legend('Generated Data','Smooth Field','Field','Location','northwest');saveas(gcf,['Plots/',file_name_string,'/','PER Comparison.png']);
-figure; plot(generated_per);hold on;plot(packet_loss_stat(:,1)./packet_loss_stat(:,2));grid on;title([minimal_experiment_name,'PER Value Comparison']);ylabel('Rate');xlabel('Range');legend('Model','Field','Location','northwest');saveas(gcf,['Plots/',file_name_string,'/','PER Comparison.png']);
-figure;plot(loss_vals);title([minimal_experiment_name,'loss']);grid on;saveas(gcf,['Plots/',file_name_string,'/','Loss.png']);
+figure;plot(packet_loss_stat(:,2));hold;plot(packet_loss_stat(:,2)-packet_loss_stat(:,1));grid on;title('Total Samples vs Received Samples');legend('Total Samples','Recieved Samples');saveas(gcf,['Plots/',file_name_string,'/','Samples Received vs Total.png']);
+figure; plot(generated_per);hold on; plot(aprx_per);plot(packet_loss_stat(:,1)./packet_loss_stat(:,2));grid on;title('PER Value');legend('Generated Data','Smooth Field','Field','Location','northwest');saveas(gcf,['Plots/',file_name_string,'/','PER Comparison.png']);
+figure;plot(loss_vals);title('loss');grid on;saveas(gcf,['Plots/',file_name_string,'/','Loss.png']);
 %     figure;plot(loss_vals);title('loss');saveas(gcf,['Plots/',file_name_string,'/','Loss.png']);
 %% Plot Nakagami Parameters
-figure;plot(fading_params(:,1));title([minimal_experiment_name,'Mu - Distance']);grid on;saveas(gcf,['Plots/',file_name_string,'/','mu_distance.png']);
-figure;plot(fading_params(:,2));title([minimal_experiment_name,'Omega - Distance']);grid on;saveas(gcf,['Plots/',file_name_string,'/','Omega_distance.png']);
+figure;plot(fading_params(:,1));title('Mu - Distance');grid on;saveas(gcf,['Plots/',file_name_string,'/','mu_distance.png']);
+figure;plot(fading_params(:,2));title('Omega - Distance');grid on;saveas(gcf,['Plots/',file_name_string,'/','Omega_distance.png']);
 %% Plot Normalized Likelihood
 ll_fun_handle = @(x)loglikelihood_samples(x{1},'lognakagami',x{2},x{3});
 fading_trunc_val_dbm = -94+pathloss-TX_POWER;
@@ -84,4 +99,4 @@ ll_fading_dbm = funonarray(ll_fun_handle,tmp_input_cell_array);
 tmp_input_cell_array = {data_fading_dbm,fading_params,fading_trunc_val_dbm'};
 ll_fading_dbm_truncated = funonarray(ll_fun_handle,tmp_input_cell_array);
 % Plot
-figure;plot(ll_fading_dbm);hold on ;plot(ll_fading_dbm_truncated);grid on;title([minimal_experiment_name,'Log Likelihood RSSI - Distance']);legend('Full Distribution','Truncated Distribution');saveas(gcf,['Plots/',file_name_string,'/','LL RSSI.png']);
+figure;plot(ll_fading_dbm);hold on ;plot(ll_fading_dbm_truncated);grid on;title('Log Likelihood RSSI - Distance');legend('Full Distribution','Truncated Distribution');saveas(gcf,['Plots/',file_name_string,'/','LL RSSI.png']);

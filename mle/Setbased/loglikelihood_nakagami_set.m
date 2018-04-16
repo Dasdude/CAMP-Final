@@ -6,7 +6,7 @@ samples_per_cell = funoncellarray1input(data,@length);
 samples_per_cell(isnan(samples_per_cell))=0;
 per_center = per_rate(current_index);
 data_center = data{current_index};
-
+std_min_samples = 200;
 for i =1:length(data)
 %     if length(data{i})<min_samples_per_cell
 %         continue;
@@ -17,7 +17,7 @@ for i =1:length(data)
     end
     data_scaled =data{i};
     current_per = per_rate(i);
-    if length(data_center)>min_samples_per_cell
+    if length(data_center)>std_min_samples && length(data_scaled)>std_min_samples
         if current_per<per_center
             data_percentile = (per_center - current_per)*(1-current_per);
             data_scaled_thresh = prctile(data_scaled,data_percentile*100);

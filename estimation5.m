@@ -38,6 +38,7 @@ for run = 1:1
     show_nakagami_dist = 0;
     calc_gaussian = 0;
     min_samples_per_cell = 100; % for estimating Fading
+    use_mean_as_pathloss = 0;
     %% File Preperation
     mode = mode_list{mode_index};
     file_string = [mode{1},' Direction ',mode{2},' Density ',mode{3},' to ',mode{4},'.csv'];
@@ -94,6 +95,9 @@ for run = 1:1
     TX_HEIGHT = tx_height(1);
     RX_HEIGHT = tx_height(1);
     pathloss = pathloss_gen_2ray(TX_HEIGHT,RX_HEIGHT,EPSILON,ALPHA,lambda,d_max);
+    if use_mean_as_pathloss
+        pathloss = pathloss_mean_estimate;
+    end
     figure;plot(1:d_max,TX_POWER -  pathloss_emperical,'r',1:d_max,TX_POWER-pathloss,'b',1:d_max,data_mean_estimate_dbm,'g');title(['Pathloss:',' alpha :',num2str(ALPHA),' eps',num2str(EPSILON),'antenna height',num2str(TX_HEIGHT)]);legend('Field Median RSSI', '2 Ray', 'Estimated Mean');saveas(gcf,['Plots/',file_name_string,'/','Pathloss Compare.png']);    
 %     pathloss = TX_POWER-data_mean_estimate_dbm(:,1);
     
@@ -127,7 +131,7 @@ for run = 1:1
     nakagami_omega = fading_params(:,2);
     tworay_pathloss_alpha = ALPHA;
     tworay_pathloss_epsilon = EPSILON;
-    save(['Plots/',file_name_string,'/Results/','Parameters.mat'],'TX_HEIGHT','RX_HEIGHT','tworay_pathloss_alpha','tworay_pathloss_epsilon','TX_POWER','CARRIER_FREQ','nakagami_mu','nakagami_omega','EPSILON','ALPHA','fading_params','aprx_per','loss_vals','fading_bin_start_edges')
+    save(['Plots/',file_name_string,'/Results/','Parameters.mat'],'TX_HEIGHT','RX_HEIGHT','tworay_pathloss_alpha','tworay_pathloss_epsilon','TX_POWER','CARRIER_FREQ','nakagami_mu','nakagami_omega','EPSILON','ALPHA','fading_params','aprx_per','loss_vals','fading_bin_start_edges','pathloss','use_mean_as_pathloss')
     
     %% Percentile
     percentiles_generated = percentile_array([10,25,50,75,90],generated_rssi_dbm);
@@ -137,9 +141,9 @@ for run = 1:1
     figure;plot(percentiles_generated_trunc(:,[1,3,5]));hold on ;plot(percentiles_rssi(:,[1,3,5]));legend('10% model','50% model','90% model','10% field','50% field','90% field');saveas(gcf,['Plots/',file_name_string,'/','Percentile RSSI Truncated 10.png']);
     
     %% PER
-    figure;plot(packet_loss_stat(:,2));hold;plot(packet_loss_stat(:,2)-packet_loss_stat(:,1));title('Total Samples vs Received Samples');legend('Total Samples','Recieved Samples');saveas(gcf,['Plots/',file_name_string,'/','Samples Received vs Total.png']);
-    figure; plot(generated_per);hold on; plot(aprx_per);plot(packet_loss_stat(:,1)./packet_loss_stat(:,2));title('PER Value');legend('Generated Data','Smooth Field','Field','Location','northwest');saveas(gcf,['Plots/',file_name_string,'/','PER Comparison.png']);
-    figure;plot(loss_vals);title('loss');saveas(gcf,['Plots/',file_name_string,'/','Loss.png']);
+%     figure;plot(packet_loss_stat(:,2));hold;plot(packet_loss_stat(:,2)-packet_loss_stat(:,1));title('Total Samples vs Received Samples');legend('Total Samples','Recieved Samples');saveas(gcf,['Plots/',file_name_string,'/','Samples Received vs Total.png']);
+%     figure; plot(generated_per);hold on; plot(aprx_per);plot(packet_loss_stat(:,1)./packet_loss_stat(:,2));title('PER Value');legend('Generated Data','Smooth Field','Field','Location','northwest');saveas(gcf,['Plots/',file_name_string,'/','PER Comparison.png']);
+%     figure;plot(loss_vals);title('loss');saveas(gcf,['Plots/',file_name_string,'/','Loss.png']);
         %     shift_values_dbm = linear2dbm_mat(fading_params(:,3));
     %% Fading Distribution Generation
 %     fading_linear_generated_cell = nakagami_generator(fading_params,10000);
