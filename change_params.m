@@ -3,39 +3,48 @@ close all
 clear
 addpath(genpath('.'))
 %% File Names
-mode_index =4;
+mode_index =6;
+same_low_up = 15;
+same_med_up = 30;
 
-SAME_DENS_LOW = {'Same','Low','0','10',1.0043,2.0108};
-    SAME_DENS_MED = {'Same','Medium','10','30',1.0091,2.0237};
-    SAME_DENS_HIGH = {'Same','High','30','Inf',1.0036,2.0576};
-    OP_DENS_LOW = {'Opposite','Low','0','10',1,2.1434};
-    OP_DENS_MED = {'Opposite','Medium','10','25',1,2.1904};
-    OP_DENS_HIGH = {'Opposite','High','25','Inf',1,2.26};
-mode_list = {SAME_DENS_LOW,SAME_DENS_MED,SAME_DENS_HIGH,OP_DENS_LOW,OP_DENS_HIGH};
+opposite_low_up = 15;
+opposite_med_up = 30;
+
+SAME_DENS_LOW = {'same','low','0',same_low_up,1.0043,2.0108};
+SAME_DENS_MED = {'same','medium',same_low_up,same_med_up,1.0091,2.0237};
+SAME_DENS_HIGH = {'same','high',same_med_up,100,1.0036,2.0576};
+OP_DENS_LOW = {'opposite','low','0',opposite_low_up,1,2.1434};
+OP_DENS_MED = {'opposite','medium',opposite_low_up,opposite_med_up,1,2.1904};
+OP_DENS_HIGH = {'opposite','high',opposite_med_up,100,1,2.26};
+mode_list = {SAME_DENS_LOW,SAME_DENS_MED,SAME_DENS_HIGH,OP_DENS_LOW,OP_DENS_MED,OP_DENS_HIGH};
 mode = mode_list{mode_index};
-experiment_name = 'SetFinal2';
-mode_name = [mode{1},' Direction ',mode{2},' Density ',mode{3},' to ',mode{4}];
+experiment_name = 'April18 Presentation';
+minimal_experiment_name = [mode{1},' Dir ',mode{2},' Density '];
+mode_name = [mode{1},' Direction ',mode{2},' Density ',num2str(mode{3}),' to ',num2str(mode{4})];
 parameter_folder = ['Plots/',experiment_name,'/',mode_name,'/Results'];
 parameter_path = [parameter_folder,'/Parameters.mat'];
 %% Load Params
 load(parameter_path);
 %% Change Parameters
-    param_index = 600;
+    param_index = 580;
     fading_params(param_index:end,2) = fading_params(param_index,2);
     fading_params(param_index:end,1) = fading_params(param_index,1);
-    fading_params(131:132,2) = fading_params(130,2);
-    fading_params(131:132,1) = fading_params(130,1);
-    save([parameter_folder,'/Parameters_edit.mat'],'TX_HEIGHT','RX_HEIGHT','tworay_pathloss_alpha','tworay_pathloss_epsilon','TX_POWER','CARRIER_FREQ','nakagami_mu','nakagami_omega','EPSILON','ALPHA','fading_params','aprx_per','loss_vals','fading_bin_start_edges','pathloss','use_mean_as_pathloss')
+%     fading_params(131:132,2) = fading_params(130,2);
+%     fading_params(131:132,1) = fading_params(130,1);
+    
    %Fourier 
-%    omega_freq = fft(fading_params(:,2));
-%    omega_freq(300:end) = 0;
-%    fading_params(:,2) = abs(ifft(omega_freq));
-%    mu_freq = fft(fading_params(:,1));
-%    mu_freq(300:end) = 0;
-%    fading_params(:,1) = abs(ifft(mu_freq));
-%    %Truncate
-%    fading_params(600:end,2) = fading_params(600,2);
-%     fading_params(600:end,1) = fading_params(600,1);
+   omega_freq = fft(fading_params(:,2));
+   omega_freq(750:end) = 0;
+   fading_params(:,2) = abs(ifft(omega_freq));
+   mu_freq = fft(fading_params(:,1));
+   mu_freq(750:end) = 0;
+   fading_params(:,1) = abs(ifft(mu_freq));
+   %Truncate
+   fading_params(700:end,2) = fading_params(600,2);
+    fading_params(700:end,1) = fading_params(600,1);
+    nakagami_mu = fading_params(:,1);
+    nakagami_omega = fading_params(:,2);
+   save([parameter_folder,'/Parameters_edit.mat'],'TX_HEIGHT','RX_HEIGHT','tworay_pathloss_alpha','tworay_pathloss_epsilon','TX_POWER','CARRIER_FREQ','nakagami_mu','nakagami_omega','EPSILON','ALPHA','fading_params','aprx_per','loss_vals','fading_bin_start_edges')
 %% Parameters
 d_max = 800;
 TRUNCATION_VALUE=-94;
@@ -43,9 +52,9 @@ LIGHT_SPEED=3*10^8;
 lambda=LIGHT_SPEED/CARRIER_FREQ;
 %% Dataset prepare
 display('Data Prepare Phase')
-file_string = [mode{1},' Direction ',mode{2},' Density ',mode{3},' to ',mode{4},'.csv'];
+file_string = sprintf('%s/s %d %d o %d %d/data results/%s %s.csv','Seperated DensityPER',same_low_up,same_med_up,opposite_low_up,opposite_med_up,mode{1},mode{2});
 input  = file_string;
-file_name_string = [experiment_name,'/',mode{1},' Direction ',mode{2},' Density ',mode{3},' to ',mode{4}];
+file_name_string = sprintf('%s/%s Direction %s Density %d to %d',experiment_name,mode{1},mode{2},mode{3},mode{4});
 csv_data = readtable(input,'ReadVariableNames',true);
 dataset_mat_dirty = [csv_data.Range,csv_data.RSS];
 any(isnan(dataset_mat_dirty))

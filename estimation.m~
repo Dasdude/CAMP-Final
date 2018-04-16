@@ -6,7 +6,7 @@ axis tight
 'Correct Project'
 experiment_name = 'April18 Presentation';
 addpath(genpath('.'))
-for mode_index = 5:5
+for mode_index = 6:6
     clearvars -except mode_index experiment_name
     close all
     %% Constant Variables
@@ -76,7 +76,7 @@ for mode_index = 5:5
         data_mean_estimate_dbm = mean_estimator_gaussian_mle_adptv_bin_window(data_dbm_cell,[1,1],1,packet_loss_stat,-inf,0,1,file_name_string,show_gassuan_dist);
         figure;plot(1:d_max,data_mean_estimate_dbm(:,1),1:d_max,data_dbm_mean);legend('Gaussian Estimate Mean Data','Field Mean Data');saveas(gcf,['Plots/',file_name_string,'/','Gaussian Mean Compare.png']);
         figure;plot(1:d_max,data_mean_estimate_dbm(:,2),1:d_max,data_dbm_std);legend('Gaussian Estimate STD Data','Field STD Data');saveas(gcf,['Plots/',file_name_string,'/','Gaussian STD Compare.png']);
-        data_mean_estimate_dbm = data_mean_estimate_dbm(:,1);
+        data_mean
         mkdir(['Plots/',file_name_string,'/Results/']);
         save(['Plots/',file_name_string,'/Results/','GmeanEst.mat'],'data_mean_estimate_dbm')
     else
@@ -90,16 +90,16 @@ for mode_index = 5:5
     end
 %     [ALPHA,EPSILON,pathloss_expand_emp] = pathloss_estimator(data_dbm_cell,TX_HEIGHT,CARRIER_FREQ,per,-95,TX_POWER);
     data_mean_emperical_true = funoncellarray1input(data_dbm_cell,@mean);
-%     data_mean_emperical = data_mean_estimate_dbm;
-    pathloss_estimate = TX_POWER - data_mean_estimate_dbm;
+    data_mean_emperical = data_mean_estimate_dbm;
+    pathloss_emperical = TX_POWER - data_mean_emperical;
     
-    [alpha,epsilon,tx_height] = pathloss_estimator_hossein_method(pathloss_estimate,TX_HEIGHT,CARRIER_FREQ,packet_loss_stat,-95,TX_POWER,500,20,1);
+    [alpha,epsilon,tx_height] = pathloss_estimator_hossein_method(pathloss_emperical,TX_HEIGHT,CARRIER_FREQ,packet_loss_stat,-95,TX_POWER,500,20,1);
     ALPHA = alpha(1);
     EPSILON = epsilon(1);
     TX_HEIGHT = tx_height(1);
     RX_HEIGHT = tx_height(1);
     pathloss = pathloss_gen_2ray(TX_HEIGHT,RX_HEIGHT,EPSILON,ALPHA,lambda,d_max);
-    figure;plot(1:d_max,data_mean_emperical_true,'r',1:d_max,TX_POWER-pathloss,'b',1:d_max,data_mean_estimate_dbm,'g');title(['Pathloss:',' alpha :',num2str(ALPHA),' eps',num2str(EPSILON),'antenna height',num2str(TX_HEIGHT)]);legend('Field Mean RSSI', '2 Ray', 'Estimated Mean');saveas(gcf,['Plots/',file_name_string,'/','Pathloss Compare.png']);    
+    figure;plot(1:d_max,TX_POWER -  pathloss_emperical,'r',1:d_max,TX_POWER-pathloss,'b',1:d_max,data_mean_estimate_dbm(:,1),'g');title(['Pathloss:',' alpha :',num2str(ALPHA),' eps',num2str(EPSILON),'antenna height',num2str(TX_HEIGHT)]);legend('Field Median RSSI', '2 Ray', 'Estimated Mean');saveas(gcf,['Plots/',file_name_string,'/','Pathloss Compare.png']);    
 %     pathloss = TX_POWER-data_mean_estimate_dbm(:,1);
     
 %     pathloss = pathloss-pathloss;
